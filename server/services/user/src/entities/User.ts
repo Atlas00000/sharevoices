@@ -12,31 +12,31 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ name: 'first_name' })
   firstName: string;
 
-  @Column()
+  @Column({ name: 'last_name' })
   lastName: string;
 
   @Column({ default: 'user' })
   role: string;
 
-  @Column({ default: false })
+  @Column({ name: 'is_verified', default: false })
   isVerified: boolean;
 
-  @Column({ nullable: true })
+  @Column({ name: 'verification_token', nullable: true })
   verificationToken?: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'reset_password_token', nullable: true })
   resetPasswordToken?: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'reset_password_expires', nullable: true, type: 'timestamp' })
   resetPasswordExpires?: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
   @BeforeInsert()

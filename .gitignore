@@ -57,7 +57,7 @@ docker-compose.override.yml
 
 # Misc
 .temp/
-.tmp/
+.tmp/ 
 
 # Environment files
 .env
