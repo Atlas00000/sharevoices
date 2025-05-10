@@ -62,6 +62,15 @@ const services = {
             logger.error(`Interaction service error: ${err.message}`);
             res.status(500).json({ error: 'Interaction service unavailable' });
         }
+    },
+    notification: {
+        target: config.services.notification.url,
+        pathRewrite: { '^/api/notifications': '' },
+        changeOrigin: true,
+        onError: (err, req, res) => {
+            logger.error(`Notification service error: ${err.message}`);
+            res.status(500).json({ error: 'Notification service unavailable' });
+        }
     }
 };
 
@@ -74,11 +83,31 @@ Object.entries(services).forEach(([service, options]) => {
 app.use(errorHandler);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'healthy' });
+app.get('/health', async (req, res) => {
+    const serviceStatus = {};
+
+    // Check each service
+    for (const [name, options] of Object.entries(services)) {
+        try {
+            const url = `${options.target}/health`;
+            const response = await fetch(url, { method: 'GET', timeout: 2000 });
+            serviceStatus[name] = response.ok ? 'healthy' : 'unhealthy';
+        } catch (error) {
+            logger.warn(`Health check failed for ${name} service: ${error.message}`);
+            serviceStatus[name] = 'unavailable';
+        }
+    }
+
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        service: 'api-gateway',
+        version: process.env.npm_package_version || '1.0.0',
+        services: serviceStatus
+    });
 });
 
 const PORT = config.port || 3000;
 app.listen(PORT, () => {
     logger.info(`API Gateway running on port ${PORT}`);
-}); 
+});

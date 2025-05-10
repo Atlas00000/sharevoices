@@ -1,4 +1,4 @@
-yes, procee# **Product Requirements Document (PRD): Shared Voices News/Media Platform**
+yes,# **Product Requirements Document (PRD): Shared Voices News/Media Platform**
 
 ## **1\. Overview**
 

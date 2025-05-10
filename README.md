@@ -28,52 +28,64 @@ A web-based news and media platform designed to inform, inspire, and empower glo
 
 2. Set up environment configuration:
    ```bash
-   # For Unix/Linux/MacOS
-   ./scripts/setup-dev.sh
-
-   # For Windows (PowerShell)
-   .\scripts\setup-dev.ps1
+   # Copy the example environment file
+   cp .env.example .env
    ```
-   This will:
-   - Check for Node.js and npm installation
-   - Create .env files from templates
-   - Install all required dependencies
 
 3. Configure environment variables:
-   - Review and update the generated `.env` files in each service directory
+   - Review and update the `.env` file with your configuration
    - Never commit actual `.env` files to version control
-   - Use `.env.example` files as templates
 
-4. Build the Docker images:
+4. Start the development environment:
    ```bash
    # For Unix/Linux/MacOS
-   chmod +x build-docker.sh
-   ./build-docker.sh
+   chmod +x scripts/dev.sh
+   ./scripts/dev.sh
 
-   # For Windows
-   build-docker.bat
+   # For Windows (PowerShell)
+   ./scripts/dev.ps1
 
-   # Or manually build all services
-   docker-compose build
-
-   # Or build a specific service
-   docker-compose build content-service
-   ```
-
-5. Start the development environment:
-   ```bash
+   # Or manually with Docker Compose
    docker-compose up -d
    ```
 
-6. Start the development servers:
+5. Start the production environment (when ready):
    ```bash
-   npm run dev
+   # For Unix/Linux/MacOS
+   chmod +x scripts/prod.sh
+   ./scripts/prod.sh
+
+   # For Windows (PowerShell)
+   ./scripts/prod.ps1
+
+   # Or manually with Docker Compose
+   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+   ```
+
+6. Stop all services:
+   ```bash
+   # For Unix/Linux/MacOS
+   chmod +x scripts/stop.sh
+   ./scripts/stop.sh
+
+   # For Windows (PowerShell)
+   ./scripts/stop.ps1
+
+   # Or manually with Docker Compose
+   docker-compose down
    ```
 
 The application will be available at:
 - Frontend: http://localhost:3000
-- Content Service: http://localhost:4001
-- User Service: http://localhost:4002
+- API Gateway: http://localhost:8080
+- Content Service: http://localhost:3002
+- User Service: http://localhost:3001
+- Interaction Service: http://localhost:3003
+- Notification Service: http://localhost:3004
+- MongoDB: mongodb://localhost:27017
+- PostgreSQL: postgresql://localhost:5432
+- Redis: redis://localhost:6379
+- Elasticsearch: http://localhost:9200
 
 ## Environment Configuration
 
@@ -135,20 +147,58 @@ sharedvoices/
 
 ## Troubleshooting
 
-### Docker Build Issues
+### Docker Setup Issues
 
-If you encounter any issues during the Docker build:
+If you encounter any issues during Docker setup:
 
 1. **Missing dependencies**: Check the error message and add any missing dependencies to the appropriate package.json file
 2. **TypeScript errors**: Update the import paths or add type definitions as needed
 3. **Docker build context issues**: Make sure the build context is set correctly in the docker-compose.yml file
 4. **Path resolution issues**: Check the tsconfig.json files to ensure the paths are configured correctly
 
+### Database Connection Issues
+
+1. **MongoDB connection errors**:
+   - Check if MongoDB container is running: `docker-compose ps mongodb`
+   - Verify connection string in the .env file
+   - Check logs: `docker-compose logs mongodb`
+
+2. **PostgreSQL connection errors**:
+   - Check if PostgreSQL container is running: `docker-compose ps postgres`
+   - Verify connection string in the .env file
+   - Check logs: `docker-compose logs postgres`
+
+### Service Startup Issues
+
+1. **Service fails to start**:
+   - Check the service logs: `docker-compose logs [service-name]`
+   - Verify environment variables are correctly set
+   - Check for port conflicts with other applications
+
+2. **Health check failures**:
+   - Check if dependent services are running
+   - Verify network connectivity between containers
+   - Check service logs for specific errors
+
 ### Common Issues
 
 1. **Module not found errors**: This is usually due to incorrect import paths or missing dependencies. Make sure the paths in the tsconfig.json files are correct and all dependencies are installed.
 2. **Type errors**: Make sure all types are properly defined and imported. If you're using a third-party library, you may need to install its type definitions.
 3. **Docker build context issues**: The Docker build context should be set to the project root to ensure all files are available during the build.
+4. **Environment variable issues**: Make sure all required environment variables are defined in your .env file.
+5. **Volume mounting issues**: If you're using Docker volumes, make sure the paths are correct and the directories exist.
+
+### Cleanup
+
+If you need to clean up and start fresh:
+
+```bash
+# Stop all containers and remove volumes
+./scripts/clean.sh
+
+# Or manually
+docker-compose down -v
+```
 
 ## Contributing
 

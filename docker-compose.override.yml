@@ -1,0 +1,98 @@
+version: '3.8'
+
+# This file is automatically loaded by docker-compose when running docker-compose up
+# It contains development-specific overrides for the base docker-compose.yml
+
+services:
+  # Frontend client - development mode
+  client:
+    build:
+      target: development
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080
+
+  # API Gateway - development mode
+  api-gateway:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./server/gateway:/app/server/gateway
+      - /app/server/gateway/node_modules
+
+  # Content Service - development mode
+  content-service:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./server/services/content:/app/server/services/content
+      - ./server/shared:/app/server/shared
+      - ./db:/app/db
+      - /app/server/services/content/node_modules
+      - /app/server/shared/node_modules
+
+  # User Service - development mode
+  user-service:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./server/services/user:/app/server/services/user
+      - ./server/shared:/app/server/shared
+      - ./db:/app/db
+      - /app/server/services/user/node_modules
+      - /app/server/shared/node_modules
+
+  # Interaction Service - development mode
+  interaction-service:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./server/services/interaction:/app/server/services/interaction
+      - ./server/shared:/app/server/shared
+      - ./db:/app/db
+      - /app/server/services/interaction/node_modules
+      - /app/server/shared/node_modules
+
+  # Notification Service - development mode
+  notification-service:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./server/services/notification:/app/server/services/notification
+      - ./server/shared:/app/server/shared
+      - ./db:/app/db
+      - /app/server/services/notification/node_modules
+      - /app/server/shared/node_modules
+
+  # MongoDB - development mode with authentication disabled
+  mongodb:
+    command: ["mongod", "--bind_ip_all"]
+    environment:
+      - MONGO_INITDB_DATABASE=sharedvoices
+
+  # PostgreSQL - development mode
+  postgres:
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sharedvoices
+
+  # Redis - development mode
+  redis:
+    command: ["redis-server", "--appendonly", "yes"]
+
+  # Elasticsearch - development mode
+  elasticsearch:
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - xpack.security.enabled=false

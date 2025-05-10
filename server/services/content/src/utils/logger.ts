@@ -1,7 +1,7 @@
 import winston from 'winston';
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+export const logger = winston.createLogger({
+  level: 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json()
@@ -11,9 +11,7 @@ const logger = winston.createLogger({
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
-      )
-    })
-  ]
-});
-
-export { logger }; 
+      ),
+    }),
+  ],
+}); 
