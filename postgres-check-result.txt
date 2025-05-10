@@ -1,0 +1,21 @@
+Checking if PostgreSQL is running...
+Attempting to run psql command...
+psql command failed: Command failed: psql -V
+'psql' is not recognized as an internal or external command,
+operable program or batch file.
+
+psql may not be installed or not in PATH
+Attempting to run pg_isready command...
+pg_isready command failed: Command failed: pg_isready
+'pg_isready' is not recognized as an internal or external command,
+operable program or batch file.
+
+PostgreSQL may not be running or pg_isready not in PATH
+Checking if PostgreSQL is running in Docker...
+Docker check failed: Command failed: docker ps | findstr postgres
+Docker may not be installed or not running
+Installing pg package...
+pg package installed successfully
+Attempting to connect to PostgreSQL using pg...
+Failed to connect to PostgreSQL using pg: Command failed: node pg-check.js
+Check completed. Results written to postgres-check-result.txt

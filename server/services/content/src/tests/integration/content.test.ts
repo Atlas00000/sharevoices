@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { app } from '../../app';
-import { Article } from '@sharedvoices/shared/src/database/schemas/mongodb/article.schema';
-import { ArticleVersion } from '@sharedvoices/shared/src/database/schemas/mongodb/article-version.schema';
+import { Article } from '@sharedvoices/db/schemas/mongodb/article.schema';
+import { ArticleVersion } from '@sharedvoices/db/schemas/mongodb/article-version.schema';
 import { generateToken } from '../utils/auth';
 
 describe('Content API Integration Tests', () => {
@@ -139,4 +139,4 @@ describe('Content API Integration Tests', () => {
             expect(response.status).toBe(403);
         });
     });
-}); 
+});

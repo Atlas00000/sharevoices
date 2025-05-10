@@ -44,12 +44,28 @@ A web-based news and media platform designed to inform, inspire, and empower glo
    - Never commit actual `.env` files to version control
    - Use `.env.example` files as templates
 
-4. Start the development environment:
+4. Build the Docker images:
+   ```bash
+   # For Unix/Linux/MacOS
+   chmod +x build-docker.sh
+   ./build-docker.sh
+
+   # For Windows
+   build-docker.bat
+
+   # Or manually build all services
+   docker-compose build
+
+   # Or build a specific service
+   docker-compose build content-service
+   ```
+
+5. Start the development environment:
    ```bash
    docker-compose up -d
    ```
 
-5. Start the development servers:
+6. Start the development servers:
    ```bash
    npm run dev
    ```
@@ -117,6 +133,23 @@ sharedvoices/
 └── tests/           # Test files
 ```
 
+## Troubleshooting
+
+### Docker Build Issues
+
+If you encounter any issues during the Docker build:
+
+1. **Missing dependencies**: Check the error message and add any missing dependencies to the appropriate package.json file
+2. **TypeScript errors**: Update the import paths or add type definitions as needed
+3. **Docker build context issues**: Make sure the build context is set correctly in the docker-compose.yml file
+4. **Path resolution issues**: Check the tsconfig.json files to ensure the paths are configured correctly
+
+### Common Issues
+
+1. **Module not found errors**: This is usually due to incorrect import paths or missing dependencies. Make sure the paths in the tsconfig.json files are correct and all dependencies are installed.
+2. **Type errors**: Make sure all types are properly defined and imported. If you're using a third-party library, you may need to install its type definitions.
+3. **Docker build context issues**: The Docker build context should be set to the project root to ensure all files are available during the build.
+
 ## Contributing
 
 1. Create a feature branch
@@ -126,4 +159,4 @@ sharedvoices/
 
 ## License
 
-MIT License - see LICENSE file for details 
+MIT License - see LICENSE file for details

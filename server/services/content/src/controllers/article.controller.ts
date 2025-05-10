@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Article, IArticle } from '../models/Article';
-import { AppError } from '../middleware/errorHandler';
+import { AppError } from '@sharedvoices/shared/src/errors';
 import { logger } from '../utils/logger';
 
 export class ArticleController {

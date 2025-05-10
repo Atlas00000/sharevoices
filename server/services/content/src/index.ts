@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import { healthRouter } from './routes/health';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
-import { connectMongoDB } from '../../../../shared/database/mongodb';
-import { Article } from '../../../../../db/schemas/mongodb/Article';
+import { connectMongoDB } from '@sharedvoices/shared/src/database/mongodb';
+import { Article } from '@sharedvoices/db/schemas/mongodb/article.schema';
 
 // Load environment variables
 dotenv.config();

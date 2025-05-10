@@ -4,40 +4,43 @@ import * as bcrypt from 'bcryptjs';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password: string;
+  password!: string;
 
-  @Column({ name: 'first_name' })
-  firstName: string;
+  @Column()
+  firstName!: string;
 
-  @Column({ name: 'last_name' })
-  lastName: string;
+  @Column()
+  lastName!: string;
 
   @Column({ default: 'user' })
-  role: string;
+  role!: string;
 
-  @Column({ name: 'is_verified', default: false })
-  isVerified: boolean;
+  @Column({ default: false })
+  isVerified!: boolean;
 
-  @Column({ name: 'verification_token', nullable: true })
-  verificationToken?: string;
+  @Column({ default: true })
+  isActive!: boolean;
 
-  @Column({ name: 'reset_password_token', nullable: true })
+  @Column({ nullable: true })
+  lastLoginAt?: Date;
+
+  @Column({ nullable: true })
   resetPasswordToken?: string;
 
-  @Column({ name: 'reset_password_expires', nullable: true, type: 'timestamp' })
+  @Column({ nullable: true })
   resetPasswordExpires?: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @CreateDateColumn()
+  createdAt!: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @UpdateDateColumn()
+  updatedAt!: Date;
 
   @BeforeInsert()
   @BeforeUpdate()

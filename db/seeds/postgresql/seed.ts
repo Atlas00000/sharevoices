@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import { User } from "../../schemas/postgresql/user.entity";
 import { Profile } from "../../schemas/postgresql/profile.entity";
 import * as bcrypt from "bcrypt";
+import { seedNotifications } from './notification.seed';
 
 export async function seedUsers(dataSource: DataSource): Promise<void> {
     const userRepository = dataSource.getRepository(User);
@@ -60,4 +61,9 @@ export async function seedUsers(dataSource: DataSource): Promise<void> {
         profile: userProfile
     });
     await userRepository.save(regularUser);
+}
+
+export async function seedAll(dataSource: DataSource): Promise<void> {
+    await seedUsers(dataSource);
+    await seedNotifications(dataSource);
 } 

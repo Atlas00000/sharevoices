@@ -1,0 +1,33 @@
+# Dependencies
+**/node_modules
+**/dist
+
+# Git
+.git
+.gitignore
+
+# Environment files
+**/.env
+**/.env.*
+
+# IDE files
+.vscode
+.idea
+
+# Logs
+**/logs
+**/*.log
+
+# Build artifacts
+**/build
+**/coverage
+
+# Docker
+**/Dockerfile
+**/docker-compose.yml
+**/.dockerignore
+
+# Misc
+.DS_Store
+*.swp
+*.swo 

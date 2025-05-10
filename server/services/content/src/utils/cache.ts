@@ -1,11 +1,8 @@
-import Redis from 'ioredis';
 import { logger } from './logger';
+import { connectRedis } from '@sharedvoices/shared/src/database/redis';
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-
-redis.on('error', (error) => {
-    logger.error('Redis connection error:', error);
-});
+// Initialize Redis client
+const redisClient = connectRedis(process.env.REDIS_URL || 'redis://localhost:6379');
 
 export class Cache {
     private static instance: Cache;
@@ -22,7 +19,8 @@ export class Cache {
 
     async get<T>(key: string): Promise<T | null> {
         try {
-            const data = await redis.get(key);
+            const client = await redisClient;
+            const data = await client.get(key);
             return data ? JSON.parse(data) : null;
         } catch (error) {
             logger.error('Cache get error:', error);
@@ -32,7 +30,8 @@ export class Cache {
 
     async set(key: string, value: any, ttl: number = this.defaultTTL): Promise<void> {
         try {
-            await redis.set(key, JSON.stringify(value), 'EX', ttl);
+            const client = await redisClient;
+            await client.set(key, JSON.stringify(value), { EX: ttl });
         } catch (error) {
             logger.error('Cache set error:', error);
         }
@@ -40,7 +39,8 @@ export class Cache {
 
     async del(key: string): Promise<void> {
         try {
-            await redis.del(key);
+            const client = await redisClient;
+            await client.del(key);
         } catch (error) {
             logger.error('Cache delete error:', error);
         }
@@ -48,9 +48,10 @@ export class Cache {
 
     async invalidatePattern(pattern: string): Promise<void> {
         try {
-            const keys = await redis.keys(pattern);
+            const client = await redisClient;
+            const keys = await client.keys(pattern);
             if (keys.length > 0) {
-                await redis.del(...keys);
+                await client.del(keys);
             }
         } catch (error) {
             logger.error('Cache pattern invalidation error:', error);
@@ -76,4 +77,4 @@ export class Cache {
     }
 }
 
-export const cache = Cache.getInstance(); 
+export const cache = Cache.getInstance();

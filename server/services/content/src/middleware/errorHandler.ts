@@ -1,18 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
-
-export interface AppError extends Error {
-  statusCode?: number;
-}
+import { AppError } from '@sharedvoices/shared/src/errors';
 
 export const errorHandler = (
-  err: AppError,
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  let statusCode = 500;
+  let message = 'Internal Server Error';
+
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+  }
 
   logger.error(`Error: ${message}`, {
     statusCode,
@@ -27,4 +29,4 @@ export const errorHandler = (
     message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
-}; 
+};

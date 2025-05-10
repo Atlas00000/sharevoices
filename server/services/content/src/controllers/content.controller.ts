@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { Article } from '@sharedvoices/shared/src/database/schemas/mongodb/article.schema';
-import { connectElasticsearch } from '@sharedvoices/shared/src/database/elasticsearch';
+import { Article } from '@sharedvoices/db/schemas/mongodb/article.schema';
+import { connectElasticsearch, ElasticsearchClient } from '@sharedvoices/shared/src/database/elasticsearch';
 import { validate } from 'class-validator';
 import slugify from 'slugify';
-import { ArticleVersion } from '@sharedvoices/shared/src/database/schemas/mongodb/article-version.schema';
+import { ArticleVersion } from '@sharedvoices/db/schemas/mongodb/article-version.schema';
 import { cache, Cache } from '../utils/cache';
 
 export class ContentController {
@@ -40,9 +40,10 @@ export class ContentController {
             await article.save();
 
             // Index in Elasticsearch
-            await this.elasticsearchClient.index({
+            const client = await this.elasticsearchClient;
+            await client.index({
                 index: 'articles',
-                id: article._id.toString(),
+                id: (article as any)._id.toString(),
                 document: {
                     title,
                     content,
@@ -65,13 +66,13 @@ export class ContentController {
     // Get all articles with pagination and filters
     async getAll(req: Request, res: Response) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
-                category, 
+            const {
+                page = 1,
+                limit = 10,
+                category,
                 status,
                 authorId,
-                search 
+                search
             } = req.query;
 
             const cacheKey = Cache.getArticleListKey({ page, limit, category, status, authorId, search });
@@ -90,7 +91,8 @@ export class ContentController {
 
             // If search query exists, use Elasticsearch
             if (search) {
-                const searchResults = await this.elasticsearchClient.search({
+                const client = await this.elasticsearchClient;
+                const searchResults = await client.search({
                     index: 'articles',
                     body: {
                         query: {
@@ -104,8 +106,7 @@ export class ContentController {
                         size: Number(limit)
                     }
                 });
-
-                const articleIds = searchResults.hits.hits.map(hit => hit._id);
+                const articleIds = (searchResults.hits.hits as Array<{ _id: string }>).map((hit) => hit._id);
                 query._id = { $in: articleIds };
             }
 
@@ -199,9 +200,10 @@ export class ContentController {
             await article.save();
 
             // Update Elasticsearch index
-            await this.elasticsearchClient.update({
+            const client = await this.elasticsearchClient;
+            await client.update({
                 index: 'articles',
-                id: article._id.toString(),
+                id: (article as any)._id.toString(),
                 doc: {
                     title: article.title,
                     content: article.content,
@@ -241,9 +243,10 @@ export class ContentController {
             await article.deleteOne();
 
             // Delete from Elasticsearch
-            await this.elasticsearchClient.delete({
+            const client = await this.elasticsearchClient;
+            await client.delete({
                 index: 'articles',
-                id: article._id.toString()
+                id: (article as any)._id.toString()
             });
 
             // Invalidate caches
@@ -276,9 +279,10 @@ export class ContentController {
             await article.save();
 
             // Update Elasticsearch index
-            await this.elasticsearchClient.update({
+            const client = await this.elasticsearchClient;
+            await client.update({
                 index: 'articles',
-                id: article._id.toString(),
+                id: (article as any)._id.toString(),
                 doc: {
                     status: 'published',
                     publishedAt: article.publishedAt
@@ -353,15 +357,15 @@ export class ContentController {
 
             // Create new version entry for the restore
             const newVersion = new ArticleVersion({
-                articleId: article._id,
-                version: (await ArticleVersion.countDocuments({ articleId: id })) + 1,
                 ...articleVersion.toObject(),
+                articleId: (article as any)._id,
+                version: (await ArticleVersion.countDocuments({ articleId: id })) + 1,
                 changes: [{
                     field: 'restore',
                     oldValue: null,
                     newValue: `Restored to version ${version}`
                 }],
-                createdBy: req.user?.id
+                createdBy: (req as any).user?.id
             });
             await newVersion.save();
 
@@ -481,4 +485,4 @@ function calculateAverageViewsPerDay(article: any): number {
 function calculateEngagementRate(article: any): number {
     const totalEngagement = article.likeCount + article.commentCount;
     return article.viewCount > 0 ? (totalEngagement / article.viewCount) * 100 : 0;
-} 
+}

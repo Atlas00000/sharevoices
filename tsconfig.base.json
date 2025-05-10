@@ -11,12 +11,11 @@
     "resolveJsonModule": true,
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "baseUrl": ".",
+    "composite": true,
     "paths": {
-      "@sharedvoices/shared/*": ["server/shared/*"]
+      "@sharedvoices/shared/*": ["server/shared/*"],
+      "@sharedvoices/db/*": ["db/*"]
     }
   },
   "exclude": ["node_modules", "dist"]
-} 
+}

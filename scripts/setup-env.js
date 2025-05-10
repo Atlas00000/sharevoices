@@ -49,6 +49,23 @@ JWT_EXPIRES_IN=24h
 # API Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=100`
+  },
+  notification: {
+    path: 'server/services/notification/.env.example',
+    template: `# Server Configuration
+PORT=4004
+NODE_ENV=development
+
+# PostgreSQL Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=sharedvoices
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+`
   }
 };
 

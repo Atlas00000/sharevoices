@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from './errorHandler';
+import { AppError } from '@sharedvoices/shared/src/errors';
 
 export const validateArticle = (req: Request, res: Response, next: NextFunction) => {
   const { title, content, category } = req.body;

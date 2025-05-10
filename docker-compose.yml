@@ -19,110 +19,92 @@ services:
 
   # Content Service
   content-service:
-    build: 
-      context: ./server/services/content
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    depends_on:
-      - mongodb
-      - elasticsearch
-
-  # User Service
-  user-service:
     build:
-      context: ./server/services/user
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/services/content/Dockerfile
     ports:
       - "3002:3002"
     environment:
       - NODE_ENV=development
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=sharedvoices
+      - PORT=3002
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sharedvoices
+      - JWT_SECRET=your-secret-key
     depends_on:
-      - postgres
+      - db
+    volumes:
+      - ./server/services/content:/app/server/services/content
+      - ./server/shared:/app/server/shared
+      - ./db:/app/db
+      - /app/server/services/content/node_modules
+      - /app/server/shared/node_modules
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: server/services/user/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sharedvoices
+      - JWT_SECRET=your-secret-key
+    depends_on:
+      - db
+    volumes:
+      - ./server/services/user:/app/server/services/user
+      - /app/server/services/user/node_modules
 
   # Interaction Service
   interaction-service:
     build:
-      context: ./server/services/interaction
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/services/interaction/Dockerfile
     ports:
       - "3003:3003"
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
-      - REDIS_URL=redis://redis:6379
+      - PORT=3003
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sharedvoices
+      - JWT_SECRET=your-secret-key
     depends_on:
-      - mongodb
-      - redis
+      - db
+    volumes:
+      - ./server/services/interaction:/app/server/services/interaction
+      - /app/server/services/interaction/node_modules
 
   # Notification Service
   notification-service:
     build:
-      context: ./server/services/notification
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/services/notification/Dockerfile
     ports:
-      - "3004:3004"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=sharedvoices
-      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/sharedvoices
+      - JWT_SECRET=your-secret-key
     depends_on:
-      - postgres
-      - redis
+      - db
+    volumes:
+      - ./server/services/notification:/app/server/services/notification
+      - /app/server/services/notification/node_modules
 
   # Databases
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-
-  postgres:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
+  db:
+    image: postgres:14-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=sharedvoices
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # Redis for caching
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  # Elasticsearch for search
-  elasticsearch:
-    image: elasticsearch:8.7.0
-    ports:
-      - "9200:9200"
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-
 volumes:
-  mongodb_data:
   postgres_data:
   redis_data:
-  elasticsearch_data: 
+  elasticsearch_data:
