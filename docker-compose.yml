@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # Frontend development server
+  client:
+    build:
+      context: ./client
+      target: development
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - content-service
+      - user-service
+
+  # Backend services
+  content-service:
+    build:
+      context: ./server/services/content
+      target: development
+    volumes:
+      - ./server/services/content:/app
+      - /app/node_modules
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
+    depends_on:
+      - mongodb
+
+  user-service:
+    build:
+      context: ./server/services/user
+      target: development
+    volumes:
+      - ./server/services/user:/app
+      - /app/node_modules
+    ports:
+      - "4002:4002"
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_URI=postgresql://postgres:postgres@postgres:5432/sharedvoices
+    depends_on:
+      - postgres
+
+  # Databases
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sharedvoices
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for caching
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Elasticsearch for search
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+volumes:
+  mongodb_data:
+  postgres_data:
+  redis_data:
+  es_data: 

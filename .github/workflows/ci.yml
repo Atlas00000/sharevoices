@@ -1,0 +1,64 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Lint
+        run: npm run lint
+      
+      - name: Run tests
+        run: npm run test
+
+  build-docker:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build client image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./client
+          push: false
+          tags: shared-voices/client:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./server
+          push: false
+          tags: shared-voices/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  verify-docker-compose:
+    needs: build-docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Verify docker-compose
+        run: docker-compose config 
