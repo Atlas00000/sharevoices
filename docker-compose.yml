@@ -1,224 +1,81 @@
 version: '3.8'
 
 services:
-  # Frontend client
+  # Frontend service
   client:
     build:
       context: ./client
-      target: development
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
     environment:
       - NODE_ENV=development
     depends_on:
-      - api-gateway
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # API Gateway
-  api-gateway:
-    build:
-      context: .
-      dockerfile: server/gateway/Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - NODE_ENV=production
-      - PORT=8080
-      - CONTENT_SERVICE_URL=http://content-service:3002
-      - USER_SERVICE_URL=http://user-service:3001
-      - INTERACTION_SERVICE_URL=http://interaction-service:3003
-      - NOTIFICATION_SERVICE_URL=http://notification-service:3004
-    depends_on:
       - content-service
       - user-service
-      - interaction-service
-      - notification-service
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
 
-  # Content Service
+  # Backend services
   content-service:
     build:
-      context: .
-      dockerfile: server/services/content/Dockerfile
+      context: ./server/services/content
+      dockerfile: Dockerfile
     ports:
       - "3002:3002"
+    volumes:
+      - ./server/services/content:/app
+      - /app/node_modules
     environment:
-      - NODE_ENV=production
-      - PORT=3002
-      - MONGODB_URI=mongodb://mongodb:27017/content
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - USE_REDIS=true
-      - JWT_SECRET=your-secret-key
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
     depends_on:
       - mongodb
-      - redis
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
 
-  # User Service
   user-service:
     build:
-      context: .
-      dockerfile: server/services/user/Dockerfile
+      context: ./server/services/user
+      dockerfile: Dockerfile
     ports:
       - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=sharedvoices
-      - JWT_SECRET=your-secret-key
-    depends_on:
-      - postgres
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-  # Interaction Service
-  interaction-service:
-    build:
-      context: .
-      dockerfile: server/services/interaction/Dockerfile
-    ports:
-      - "3003:3003"
-    environment:
-      - NODE_ENV=production
-      - PORT=3003
-      - MONGODB_URI=mongodb://mongodb:27017/interaction
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - USE_REDIS=true
-      - JWT_SECRET=your-secret-key
-    depends_on:
-      - mongodb
-      - redis
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-  # Notification Service
-  notification-service:
-    build:
-      context: .
-      dockerfile: server/services/notification/Dockerfile
-    ports:
-      - "3004:3004"
-    environment:
-      - NODE_ENV=production
-      - PORT=3004
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=sharedvoices
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - USE_REDIS=true
-      - JWT_SECRET=your-secret-key
-    depends_on:
-      - postgres
-      - redis
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3004/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:14-alpine
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=sharedvoices
-    ports:
-      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d sharedvoices"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - ./server/services/user:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_URI=postgresql://postgres:postgres@postgres:5432/sharedvoices
+    depends_on:
+      - postgres
 
-  # MongoDB Database
+  # Databases
   mongodb:
     image: mongo:latest
     ports:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
-  # Redis Cache
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sharedvoices
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis for caching
   redis:
-    image: redis:alpine
+    image: redis:latest
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # Elasticsearch
-  elasticsearch:
-    image: elasticsearch:8.12.1
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
 
 volumes:
-  postgres_data:
   mongodb_data:
-  redis_data:
-  elasticsearch_data:
+  postgres_data:
+  redis_data: 

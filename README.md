@@ -9,13 +9,13 @@ A web-based news and media platform designed to inform, inspire, and empower glo
 - **Databases**: MongoDB (content), PostgreSQL (users)
 - **Search**: Elasticsearch
 - **Caching**: Redis
-- **Containerization**: Docker
 - **CI/CD**: GitHub Actions
+
+> **Note:** Docker and all related files have been temporarily removed to simplify local development. Once local development of the frontend, backend, and databases is stable, Docker will be reintroduced for easier setup and deployment.
 
 ## Prerequisites
 
 - Node.js >= 18.0.0
-- Docker and Docker Compose
 - Git
 
 ## Getting Started
@@ -44,25 +44,9 @@ A web-based news and media platform designed to inform, inspire, and empower glo
 
    # For Windows (PowerShell)
    ./scripts/dev.ps1
-
-   # Or manually with Docker Compose
-   docker-compose up -d
    ```
 
-5. Start the production environment (when ready):
-   ```bash
-   # For Unix/Linux/MacOS
-   chmod +x scripts/prod.sh
-   ./scripts/prod.sh
-
-   # For Windows (PowerShell)
-   ./scripts/prod.ps1
-
-   # Or manually with Docker Compose
-   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-   ```
-
-6. Stop all services:
+5. Stop all services:
    ```bash
    # For Unix/Linux/MacOS
    chmod +x scripts/stop.sh
@@ -70,9 +54,6 @@ A web-based news and media platform designed to inform, inspire, and empower glo
 
    # For Windows (PowerShell)
    ./scripts/stop.ps1
-
-   # Or manually with Docker Compose
-   docker-compose down
    ```
 
 The application will be available at:
@@ -147,57 +128,20 @@ sharedvoices/
 
 ## Troubleshooting
 
-### Docker Setup Issues
-
-If you encounter any issues during Docker setup:
-
-1. **Missing dependencies**: Check the error message and add any missing dependencies to the appropriate package.json file
-2. **TypeScript errors**: Update the import paths or add type definitions as needed
-3. **Docker build context issues**: Make sure the build context is set correctly in the docker-compose.yml file
-4. **Path resolution issues**: Check the tsconfig.json files to ensure the paths are configured correctly
-
-### Database Connection Issues
-
-1. **MongoDB connection errors**:
-   - Check if MongoDB container is running: `docker-compose ps mongodb`
-   - Verify connection string in the .env file
-   - Check logs: `docker-compose logs mongodb`
-
-2. **PostgreSQL connection errors**:
-   - Check if PostgreSQL container is running: `docker-compose ps postgres`
-   - Verify connection string in the .env file
-   - Check logs: `docker-compose logs postgres`
-
-### Service Startup Issues
-
-1. **Service fails to start**:
-   - Check the service logs: `docker-compose logs [service-name]`
-   - Verify environment variables are correctly set
-   - Check for port conflicts with other applications
-
-2. **Health check failures**:
-   - Check if dependent services are running
-   - Verify network connectivity between containers
-   - Check service logs for specific errors
-
 ### Common Issues
 
 1. **Module not found errors**: This is usually due to incorrect import paths or missing dependencies. Make sure the paths in the tsconfig.json files are correct and all dependencies are installed.
 2. **Type errors**: Make sure all types are properly defined and imported. If you're using a third-party library, you may need to install its type definitions.
-3. **Docker build context issues**: The Docker build context should be set to the project root to ensure all files are available during the build.
-4. **Environment variable issues**: Make sure all required environment variables are defined in your .env file.
-5. **Volume mounting issues**: If you're using Docker volumes, make sure the paths are correct and the directories exist.
+3. **Environment variable issues**: Make sure all required environment variables are defined in your .env file.
 
 ### Cleanup
 
 If you need to clean up and start fresh:
 
 ```bash
-# Stop all containers and remove volumes
-./scripts/clean.sh
-
-# Or manually
-docker-compose down -v
+# Remove node_modules and reinstall dependencies
+rm -rf node_modules
+npm install
 ```
 
 ## Contributing

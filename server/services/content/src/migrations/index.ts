@@ -10,6 +10,9 @@ async function runMigrations() {
 
     // Create collections and indexes
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Database connection not established');
+    }
 
     // Create articles collection with indexes
     await db.createCollection('articles');

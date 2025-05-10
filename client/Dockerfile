@@ -1,14 +1,27 @@
-# Client Dockerfile
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+# Build stage
+FROM node:18-alpine as builder
 
-FROM node:18-alpine AS prod
 WORKDIR /app
-RUN npm install -g serve
-COPY --from=build /app/dist ./dist
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Development stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy built files from builder
+COPY --from=builder /app .
+
+# Expose port
 EXPOSE 3000
-CMD ["serve", "-s", "dist", "-l", "3000"] 
+
+# Start development server
+CMD ["npm", "run", "dev"] 
