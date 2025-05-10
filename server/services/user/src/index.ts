@@ -1,51 +1,47 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { connectPostgreSQL } from '@sharedvoices/shared/src/database/postgresql';
+import { config } from 'dotenv';
+import { AppDataSource } from './config/database';
+import { setupRoutes } from './routes';
+import { errorHandler } from './middleware/errorHandler';
+import { logger } from './utils/logger';
 
 // Load environment variables
-dotenv.config();
+config();
 
 const app = express();
 const port = process.env.PORT || 3002;
 
-let postgresConnected = false;
-
 // Middleware
-app.use(cors());
 app.use(helmet());
+app.use(cors());
 app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
+  res.status(200).json({
     status: 'ok',
-    service: 'user-service',
-    postgresConnected,
+    timestamp: new Date().toISOString(),
+    service: 'user-service'
   });
 });
 
-async function start() {
-  try {
-    // Connect to PostgreSQL
-    await connectPostgreSQL({
-      host: process.env.POSTGRES_HOST || 'localhost',
-      port: parseInt(process.env.POSTGRES_PORT || '5432'),
-      username: process.env.POSTGRES_USER || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || 'postgres',
-      database: process.env.POSTGRES_DB || 'sharedvoices',
+// Setup routes
+setupRoutes(app);
+
+// Error handling
+app.use(errorHandler);
+
+// Initialize database connection and start server
+AppDataSource.initialize()
+  .then(() => {
+    logger.info('Database connection established');
+    app.listen(port, () => {
+      logger.info(`User service listening on port ${port}`);
     });
-    postgresConnected = true;
-    console.log('Connected to PostgreSQL');
-  } catch (err) {
-    postgresConnected = false;
-    console.error('Failed to connect to PostgreSQL:', err);
-  }
-
-  app.listen(port, () => {
-    console.log(`User service listening on port ${port}`);
-  });
-}
-
-start(); 
+  })
+  .catch((error) => {
+    logger.error('Error during Data Source initialization:', error);
+    process.exit(1);
+  }); 

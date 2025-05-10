@@ -1,45 +1,38 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { connectMongoDB } from '@sharedvoices/shared/src/database/mongodb';
+import { config } from 'dotenv';
+import { setupRoutes } from './routes';
+import { errorHandler } from './middleware/errorHandler';
+import { logger } from './utils/logger';
 
 // Load environment variables
-dotenv.config();
+config();
 
 const app = express();
-const port = process.env.PORT || 3001;
-
-let mongoConnected = false;
+const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
 app.use(helmet());
+app.use(cors());
 app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
+  res.status(200).json({
     status: 'ok',
-    service: 'content-service',
-    mongoConnected,
+    timestamp: new Date().toISOString(),
+    service: 'content-service'
   });
 });
 
-async function start() {
-  try {
-    // Connect to MongoDB
-    await connectMongoDB(process.env.MONGODB_URI || 'mongodb://localhost:27017/sharedvoices');
-    mongoConnected = true;
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    mongoConnected = false;
-    console.error('Failed to connect to MongoDB:', err);
-  }
+// Setup routes
+setupRoutes(app);
 
-  app.listen(port, () => {
-    console.log(`Content service listening on port ${port}`);
-  });
-}
+// Error handling
+app.use(errorHandler);
 
-start(); 
+// Start server
+app.listen(port, () => {
+  logger.info(`Content service listening on port ${port}`);
+}); 
