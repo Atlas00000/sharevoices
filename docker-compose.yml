@@ -17,36 +17,71 @@ services:
       - content-service
       - user-service
 
-  # Backend services
+  # Content Service
   content-service:
-    build:
+    build: 
       context: ./server/services/content
-      target: development
-    volumes:
-      - ./server/services/content:/app
-      - /app/node_modules
+      dockerfile: Dockerfile
     ports:
-      - "4001:4001"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - mongodb
+      - elasticsearch
 
+  # User Service
   user-service:
     build:
       context: ./server/services/user
-      target: development
-    volumes:
-      - ./server/services/user:/app
-      - /app/node_modules
+      dockerfile: Dockerfile
     ports:
-      - "4002:4002"
+      - "3002:3002"
     environment:
       - NODE_ENV=development
-      - POSTGRES_URI=postgresql://postgres:postgres@postgres:5432/sharedvoices
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sharedvoices
     depends_on:
       - postgres
+
+  # Interaction Service
+  interaction-service:
+    build:
+      context: ./server/services/interaction
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/sharedvoices
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongodb
+      - redis
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./server/services/notification
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=sharedvoices
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
 
   # Databases
   mongodb:
@@ -69,7 +104,7 @@ services:
 
   # Redis for caching
   redis:
-    image: redis:latest
+    image: redis:alpine
     ports:
       - "6379:6379"
     volumes:
@@ -77,17 +112,17 @@ services:
 
   # Elasticsearch for search
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    image: elasticsearch:8.7.0
     ports:
       - "9200:9200"
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - elasticsearch_data:/usr/share/elasticsearch/data
 
 volumes:
   mongodb_data:
   postgres_data:
   redis_data:
-  es_data: 
+  elasticsearch_data: 

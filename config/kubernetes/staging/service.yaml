@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sharedvoices-client
+  namespace: staging
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: sharedvoices-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sharedvoices-content
+  namespace: staging
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4001
+    targetPort: 4001
+  selector:
+    app: sharedvoices-content
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sharedvoices-user
+  namespace: staging
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4002
+    targetPort: 4002
+  selector:
+    app: sharedvoices-user 

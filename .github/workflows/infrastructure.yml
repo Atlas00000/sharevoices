@@ -1,0 +1,77 @@
+name: Infrastructure Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  setup-infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'latest'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig.yaml
+        export KUBECONFIG=kubeconfig.yaml
+
+    - name: Setup infrastructure
+      run: |
+        chmod +x ./scripts/setup-infrastructure.sh
+        ./scripts/setup-infrastructure.sh
+      env:
+        MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        POSTGRES_URI: ${{ secrets.POSTGRES_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+        DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+        CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        INGRESS_IP: ${{ secrets.INGRESS_IP }}
+
+    - name: Verify setup
+      run: |
+        # Verify namespaces
+        kubectl get namespaces
+        
+        # Verify cert-manager
+        kubectl get pods -n cert-manager
+        
+        # Verify ingress controller
+        kubectl get pods -n ingress-nginx
+        
+        # Verify secrets
+        kubectl get secrets -n secrets
+        
+        # Verify deployments
+        kubectl get deployments -n ${{ github.event.inputs.environment }}
+        
+        # Verify services
+        kubectl get services -n ${{ github.event.inputs.environment }}
+        
+        # Verify ingress
+        kubectl get ingress -n ${{ github.event.inputs.environment }}
+        
+        # Verify certificates
+        kubectl get certificates -n ${{ github.event.inputs.environment }} 
