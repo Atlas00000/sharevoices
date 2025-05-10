@@ -1,33 +1,24 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { config } from 'dotenv';
-import { setupRoutes } from './routes';
+import dotenv from 'dotenv';
+import { healthRouter } from './routes/health';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 
 // Load environment variables
-config();
+dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4001;
 
 // Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    service: 'content-service'
-  });
-});
-
-// Setup routes
-setupRoutes(app);
+// Routes
+app.use('/health', healthRouter);
 
 // Error handling
 app.use(errorHandler);
@@ -35,4 +26,4 @@ app.use(errorHandler);
 // Start server
 app.listen(port, () => {
   logger.info(`Content service listening on port ${port}`);
-}); 
+});

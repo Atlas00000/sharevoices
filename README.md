@@ -26,17 +26,30 @@ A web-based news and media platform designed to inform, inspire, and empower glo
    cd sharevoices
    ```
 
-2. Install dependencies:
+2. Set up environment configuration:
    ```bash
-   npm install
-   ```
+   # For Unix/Linux/MacOS
+   ./scripts/setup-dev.sh
 
-3. Start the development environment:
+   # For Windows (PowerShell)
+   .\scripts\setup-dev.ps1
+   ```
+   This will:
+   - Check for Node.js and npm installation
+   - Create .env files from templates
+   - Install all required dependencies
+
+3. Configure environment variables:
+   - Review and update the generated `.env` files in each service directory
+   - Never commit actual `.env` files to version control
+   - Use `.env.example` files as templates
+
+4. Start the development environment:
    ```bash
    docker-compose up -d
    ```
 
-4. Start the development servers:
+5. Start the development servers:
    ```bash
    npm run dev
    ```
@@ -45,6 +58,28 @@ The application will be available at:
 - Frontend: http://localhost:3000
 - Content Service: http://localhost:4001
 - User Service: http://localhost:4002
+
+## Environment Configuration
+
+### Environment Files
+- `.env.example`: Template files with placeholder values
+- `.env`: Local environment files (not committed to git)
+- `.env.development`: Development environment configuration
+- `.env.production`: Production environment configuration
+
+### Required Environment Variables
+- Database connection strings
+- API keys and secrets
+- Service ports and URLs
+- Authentication credentials
+- External service configurations
+
+### Security Best Practices
+1. Never commit sensitive data to version control
+2. Use environment variables for all configuration
+3. Keep API keys and secrets secure
+4. Rotate credentials regularly
+5. Use different configurations for development and production
 
 ## Development Workflow
 

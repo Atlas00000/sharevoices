@@ -26,11 +26,11 @@ COPY package*.json ./
 # Install production dependencies only
 RUN npm ci --only=production
 
-# Copy built files from builder
+# Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
 # Expose port
-EXPOSE 3000
+EXPOSE 4001
 
 # Start the service
 CMD ["node", "dist/index.js"] 

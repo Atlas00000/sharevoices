@@ -1,10 +1,12 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+
+# Install dependencies
 RUN npm ci
 
 # Copy source code
@@ -14,23 +16,21 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files and install production dependencies
+# Copy package files
 COPY package*.json ./
+
+# Install production dependencies only
 RUN npm ci --only=production
 
-# Copy built files from builder
+# Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3002
-
 # Expose port
-EXPOSE 3002
+EXPOSE 4002
 
 # Start the service
 CMD ["node", "dist/index.js"] 

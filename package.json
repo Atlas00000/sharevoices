@@ -13,7 +13,9 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "setup:env": "node scripts/setup-env.js",
+    "copy:env": "node scripts/copy-env.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

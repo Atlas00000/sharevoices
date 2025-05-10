@@ -9,7 +9,7 @@ import { connectRedis } from '@sharedvoices/shared/src/database/redis';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3003;
+const port = process.env.PORT || 4003;
 
 let mongoConnected = false;
 let redisConnected = false;
@@ -21,11 +21,11 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({
+  res.status(200).json({
     status: 'ok',
+    timestamp: new Date().toISOString(),
     service: 'interaction-service',
-    mongoConnected,
-    redisConnected,
+    version: process.env.npm_package_version || '1.0.0'
   });
 });
 
