@@ -1,4 +1,11 @@
 import express from 'express';
+import {
+  getUserProfile,
+  updateUserProfile,
+  updateUserPreferences,
+  getAllUsers,
+  updateUserRole
+} from '../controllers/userController';
 import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '../models/User';
 
@@ -16,21 +23,9 @@ router.post('/login', (req, res) => {
 });
 
 // Protected routes
-router.get('/profile',
-  authenticate,
-  (req, res) => {
-    // TODO: Implement get user profile
-    res.status(501).json({ error: 'Not implemented' });
-  }
-);
-
-router.put('/profile',
-  authenticate,
-  (req, res) => {
-    // TODO: Implement update user profile
-    res.status(501).json({ error: 'Not implemented' });
-  }
-);
+router.get('/profile', authenticate, getUserProfile);
+router.put('/profile', authenticate, updateUserProfile);
+router.put('/preferences', authenticate, updateUserPreferences);
 
 router.get('/admin/users',
   authenticate,
@@ -40,5 +35,9 @@ router.get('/admin/users',
     res.status(501).json({ error: 'Not implemented' });
   }
 );
+
+// Admin routes
+router.get('/', authenticate, authorize([UserRole.ADMIN]), getAllUsers);
+router.put('/:userId/role', authenticate, authorize([UserRole.ADMIN]), updateUserRole);
 
 export default router; 

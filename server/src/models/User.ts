@@ -1,5 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 
 // User roles enum
 export enum UserRole {
@@ -8,37 +9,149 @@ export enum UserRole {
   READER = 'reader'
 }
 
-// Zod schema for user validation
+// User preferences interface
+export interface IUserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  language: string;
+  timezone: string;
+  emailNotifications: {
+    newArticles: boolean;
+    comments: boolean;
+    mentions: boolean;
+    newsletter: boolean;
+  };
+}
+
+// User profile interface
+export interface IUserProfile {
+  bio: string;
+  avatar: string;
+  socialLinks: {
+    twitter?: string;
+    linkedin?: string;
+    github?: string;
+    website?: string;
+  };
+  location: string;
+  interests: string[];
+}
+
+// User interface
+export interface IUser extends Document {
+  email: string;
+  password: string;
+  name: string;
+  role: UserRole;
+  preferences: IUserPreferences;
+  profile: IUserProfile;
+  createdAt: Date;
+  updatedAt: Date;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+// User preferences schema
+const userPreferencesSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system']).default('system'),
+  language: z.string().default('en'),
+  timezone: z.string().default('UTC'),
+  emailNotifications: z.object({
+    newArticles: z.boolean().default(true),
+    comments: z.boolean().default(true),
+    mentions: z.boolean().default(true),
+    newsletter: z.boolean().default(false)
+  })
+});
+
+// User profile schema
+const userProfileSchema = z.object({
+  bio: z.string().max(500).default(''),
+  avatar: z.string().url().optional(),
+  socialLinks: z.object({
+    twitter: z.string().url().optional(),
+    linkedin: z.string().url().optional(),
+    github: z.string().url().optional(),
+    website: z.string().url().optional()
+  }).default({}),
+  location: z.string().default(''),
+  interests: z.array(z.string()).default([])
+});
+
+// User schema
 export const userSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(2),
   role: z.nativeEnum(UserRole).default(UserRole.READER),
-  createdAt: z.date().default(() => new Date()),
-  updatedAt: z.date().default(() => new Date())
+  preferences: userPreferencesSchema.default({
+    theme: 'system',
+    language: 'en',
+    timezone: 'UTC',
+    emailNotifications: {
+      newArticles: true,
+      comments: true,
+      mentions: true,
+      newsletter: false
+    }
+  }),
+  profile: userProfileSchema.default({
+    bio: '',
+    avatar: '',
+    socialLinks: {},
+    location: '',
+    interests: []
+  })
 });
-
-// Type inference from Zod schema
-export type User = z.infer<typeof userSchema>;
 
 // Mongoose schema
 const userMongooseSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
-  role: { 
-    type: String, 
-    enum: Object.values(UserRole),
-    default: UserRole.READER 
+  role: { type: String, enum: Object.values(UserRole), default: UserRole.READER },
+  preferences: {
+    theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+    language: { type: String, default: 'en' },
+    timezone: { type: String, default: 'UTC' },
+    emailNotifications: {
+      newArticles: { type: Boolean, default: true },
+      comments: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+      newsletter: { type: Boolean, default: false }
+    }
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  profile: {
+    bio: { type: String, maxlength: 500, default: '' },
+    avatar: { type: String },
+    socialLinks: {
+      twitter: { type: String },
+      linkedin: { type: String },
+      github: { type: String },
+      website: { type: String }
+    },
+    location: { type: String, default: '' },
+    interests: [{ type: String }]
+  }
+}, {
+  timestamps: true
 });
 
-// Update the updatedAt timestamp before saving
-userMongooseSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
+// Hash password before saving
+userMongooseSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
 });
 
-export const User = mongoose.model<User>('User', userMongooseSchema); 
+// Compare password method
+userMongooseSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = mongoose.model<IUser>('User', userMongooseSchema);
+export type UserInput = z.infer<typeof userSchema>; 
