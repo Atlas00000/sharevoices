@@ -19,10 +19,10 @@ services:
 
   client:
     build:
-      context: ./client
-      target: builder
+      context: .
+      dockerfile: client/Dockerfile
     volumes:
-      - ./client:/app
+      - ./client:/app/client
       - /app/node_modules
     ports:
       - "3000:3000"
