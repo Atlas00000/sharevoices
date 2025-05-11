@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
 import { Article, ArticleSchema, ArticleStatus, ArticleCategory } from '../models/Article';
+import { validateAndSanitizeContent } from '../utils/contentValidation';
+import { processImage, getImageUrl } from '../utils/imageUpload';
+import { scheduleArticlePublication, cancelScheduledPublication } from '../utils/scheduler';
 
 // Get all articles with search, pagination, and filters
 export const getArticles = async (req: Request, res: Response) => {
@@ -9,6 +12,7 @@ export const getArticles = async (req: Request, res: Response) => {
     const search = req.query.search as string || '';
     const category = req.query.category as ArticleCategory;
     const status = req.query.status as ArticleStatus;
+    const tag = req.query.tag as string;
 
     // Build search query
     const query: any = {};
@@ -26,6 +30,10 @@ export const getArticles = async (req: Request, res: Response) => {
 
     if (status) {
       query.status = status;
+    }
+
+    if (tag) {
+      query.tags = tag;
     }
 
     // Get total count for pagination
@@ -67,12 +75,30 @@ export const getArticle = async (req: Request, res: Response) => {
 // Create article
 export const createArticle = async (req: Request, res: Response) => {
   try {
-    const validatedData = ArticleSchema.parse(req.body);
+    // Process featured image if uploaded
+    let featuredImage;
+    if (req.file) {
+      const processedImagePath = await processImage(req.file.path);
+      featuredImage = getImageUrl(processedImagePath);
+    }
+
+    // Validate and sanitize content
+    const validatedData = validateAndSanitizeContent({
+      ...req.body,
+      featuredImage
+    });
+
     const article = new Article({
       ...validatedData,
       author: req.user?.id,
       version: 1
     });
+
+    // Schedule publication if publish date is set
+    if (article.publishedAt && article.status === ArticleStatus.DRAFT) {
+      await scheduleArticlePublication(article._id.toString(), article.publishedAt);
+    }
+
     await article.save();
     res.status(201).json(article);
   } catch (error) {
@@ -83,7 +109,6 @@ export const createArticle = async (req: Request, res: Response) => {
 // Update article
 export const updateArticle = async (req: Request, res: Response) => {
   try {
-    const validatedData = ArticleSchema.parse(req.body);
     const article = await Article.findById(req.params.id);
 
     if (!article) {
@@ -94,6 +119,19 @@ export const updateArticle = async (req: Request, res: Response) => {
     if (article.author.toString() !== req.user?.id && req.user?.role !== 'admin') {
       return res.status(403).json({ error: 'Not authorized to update this article' });
     }
+
+    // Process featured image if uploaded
+    let featuredImage = article.featuredImage;
+    if (req.file) {
+      const processedImagePath = await processImage(req.file.path);
+      featuredImage = getImageUrl(processedImagePath);
+    }
+
+    // Validate and sanitize content
+    const validatedData = validateAndSanitizeContent({
+      ...req.body,
+      featuredImage
+    });
 
     // Store previous version if content is changed
     if (validatedData.content !== article.content) {
@@ -108,6 +146,14 @@ export const updateArticle = async (req: Request, res: Response) => {
 
     // Update article
     Object.assign(article, validatedData);
+
+    // Handle publication scheduling
+    if (article.publishedAt && article.status === ArticleStatus.DRAFT) {
+      await scheduleArticlePublication(article._id.toString(), article.publishedAt);
+    } else {
+      cancelScheduledPublication(article._id.toString());
+    }
+
     await article.save();
     res.json(article);
   } catch (error) {
@@ -130,15 +176,11 @@ export const updateArticleStatus = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Not authorized to update this article' });
     }
 
-    // Validate status
-    if (!Object.values(ArticleStatus).includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
-    }
-
-    // Update status and publishedAt if publishing
+    // Update status
     article.status = status;
-    if (status === ArticleStatus.PUBLISHED && !article.publishedAt) {
+    if (status === ArticleStatus.PUBLISHED) {
       article.publishedAt = new Date();
+      cancelScheduledPublication(article._id.toString());
     }
 
     await article.save();
@@ -159,7 +201,7 @@ export const getArticleVersions = async (req: Request, res: Response) => {
 
     // Check if user is the author or admin
     if (article.author.toString() !== req.user?.id && req.user?.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to view versions' });
+      return res.status(403).json({ error: 'Not authorized to view article versions' });
     }
 
     res.json({
@@ -180,10 +222,13 @@ export const deleteArticle = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Article not found' });
     }
 
-    // Check if user is the author or admin
-    if (article.author.toString() !== req.user?.id && req.user?.role !== 'admin') {
-      return res.status(403).json({ error: 'Not authorized to delete this article' });
+    // Check if user is admin
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete articles' });
     }
+
+    // Cancel any scheduled publication
+    cancelScheduledPublication(article._id.toString());
 
     await article.deleteOne();
     res.json({ message: 'Article deleted successfully' });

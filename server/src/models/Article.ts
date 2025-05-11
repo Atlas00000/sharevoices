@@ -30,6 +30,7 @@ export const ArticleSchema = z.object({
   publishedAt: z.date().optional(),
   status: z.nativeEnum(ArticleStatus).default(ArticleStatus.DRAFT),
   version: z.number().default(1),
+  featuredImage: z.string().optional(),
   previousVersions: z.array(z.object({
     content: z.string(),
     updatedAt: z.date(),
@@ -47,6 +48,7 @@ export interface IArticle extends Document {
   publishedAt?: Date;
   status: ArticleStatus;
   version: number;
+  featuredImage?: string;
   previousVersions?: Array<{
     content: string;
     updatedAt: Date;
@@ -74,6 +76,7 @@ const articleSchema = new Schema<IArticle>({
     default: ArticleStatus.DRAFT
   },
   version: { type: Number, default: 1 },
+  featuredImage: { type: String },
   previousVersions: [{
     content: { type: String, required: true },
     updatedAt: { type: Date, default: Date.now },

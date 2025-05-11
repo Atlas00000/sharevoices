@@ -10,6 +10,7 @@ import {
 } from '../controllers/articleController';
 import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '../models/User';
+import { upload } from '../utils/imageUpload';
 
 const router = express.Router();
 
@@ -21,12 +22,14 @@ router.get('/:id', getArticle);
 router.post('/', 
   authenticate, 
   authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  upload.single('featuredImage'),
   createArticle
 );
 
 router.put('/:id', 
   authenticate, 
   authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  upload.single('featuredImage'),
   updateArticle
 );
 
