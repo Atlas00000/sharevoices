@@ -1,5 +1,6 @@
 import sanitizeHtml from 'sanitize-html';
 import { z } from 'zod';
+import { ArticleCategory } from '../models/Article';
 
 // Sanitization options
 const sanitizeOptions = {
@@ -27,6 +28,9 @@ export const contentSchema = z.object({
   content: z.string()
     .min(1, 'Content is required')
     .max(50000, 'Content must be less than 50,000 characters'),
+  category: z.nativeEnum(ArticleCategory, {
+    errorMap: () => ({ message: 'Invalid category. Must be one of: ' + Object.values(ArticleCategory).join(', ') })
+  }),
   excerpt: z.string()
     .max(500, 'Excerpt must be less than 500 characters')
     .optional(),
@@ -45,13 +49,20 @@ export const sanitizeContent = (content: string): string => {
 
 // Validate and sanitize article content
 export const validateAndSanitizeContent = (data: any) => {
-  // Validate data structure
-  const validatedData = contentSchema.parse(data);
+  try {
+    // Validate data structure
+    const validatedData = contentSchema.parse(data);
 
-  // Sanitize content
-  return {
-    ...validatedData,
-    content: sanitizeContent(validatedData.content),
-    excerpt: validatedData.excerpt ? sanitizeContent(validatedData.excerpt) : undefined
-  };
-}; 
+    // Sanitize content
+    return {
+      ...validatedData,
+      content: sanitizeContent(validatedData.content),
+      excerpt: validatedData.excerpt ? sanitizeContent(validatedData.excerpt) : undefined
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Validation error:', error.errors);
+    }
+    throw error;
+  }
+};

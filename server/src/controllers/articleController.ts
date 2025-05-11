@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { z } from 'zod';
 import { Article, ArticleSchema, ArticleStatus, ArticleCategory } from '../models/Article';
 import { validateAndSanitizeContent } from '../utils/contentValidation';
 import { processImage, getImageUrl } from '../utils/imageUpload';
@@ -16,7 +17,7 @@ export const getArticles = async (req: Request, res: Response) => {
 
     // Build search query
     const query: any = {};
-    
+
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -75,6 +76,8 @@ export const getArticle = async (req: Request, res: Response) => {
 // Create article
 export const createArticle = async (req: Request, res: Response) => {
   try {
+    console.log('Creating article with data:', req.body);
+
     // Process featured image if uploaded
     let featuredImage;
     if (req.file) {
@@ -88,6 +91,8 @@ export const createArticle = async (req: Request, res: Response) => {
       featuredImage
     });
 
+    console.log('Validated article data:', validatedData);
+
     const article = new Article({
       ...validatedData,
       author: req.user?.id,
@@ -100,8 +105,16 @@ export const createArticle = async (req: Request, res: Response) => {
     }
 
     await article.save();
+    console.log('Article created successfully:', article._id);
     res.status(201).json(article);
   } catch (error) {
+    console.error('Article creation error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: 'Invalid input data',
+        details: error.errors 
+      });
+    }
     res.status(400).json({ error: 'Invalid input data' });
   }
 };
@@ -235,4 +248,4 @@ export const deleteArticle = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
-}; 
+};

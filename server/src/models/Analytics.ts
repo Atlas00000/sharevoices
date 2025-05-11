@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const articleAnalyticsSchema = z.object({
   articleId: z.string(),
   views: z.number().default(0),
-  uniqueViews: z.number().default(0),
+  uniqueViews: z.array(z.string()).default([]),
   likes: z.number().default(0),
   shares: z.number().default(0),
   comments: z.number().default(0),
@@ -66,7 +66,7 @@ export const errorTrackingSchema = z.object({
 const articleAnalyticsMongooseSchema = new mongoose.Schema({
   articleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Article', required: true },
   views: { type: Number, default: 0 },
-  uniqueViews: { type: Number, default: 0 },
+  uniqueViews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   likes: { type: Number, default: 0 },
   shares: { type: Number, default: 0 },
   comments: { type: Number, default: 0 },

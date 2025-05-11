@@ -11,6 +11,17 @@ export const trackArticleView = async (req: Request, res: Response) => {
     const { articleId } = req.params;
     const userId = req.user?.id;
 
+    console.log('Tracking article view:', { articleId, userId });
+
+    // Verify article exists
+    const article = await Article.findById(articleId);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const analytics = await ArticleAnalytics.findOneAndUpdate(
       { articleId },
       {
@@ -18,7 +29,7 @@ export const trackArticleView = async (req: Request, res: Response) => {
         $addToSet: { uniqueViews: userId },
         $push: {
           dailyStats: {
-            date: new Date(),
+            date: today,
             views: 1,
             uniqueViews: userId ? 1 : 0
           }
@@ -27,8 +38,10 @@ export const trackArticleView = async (req: Request, res: Response) => {
       { upsert: true, new: true }
     );
 
+    console.log('Article view tracked:', analytics);
     res.json(analytics);
   } catch (error) {
+    console.error('Error tracking article view:', error);
     res.status(500).json({ error: 'Failed to track article view' });
   }
 };
@@ -36,9 +49,19 @@ export const trackArticleView = async (req: Request, res: Response) => {
 export const getArticleAnalytics = async (req: Request, res: Response) => {
   try {
     const { articleId } = req.params;
+    console.log('Getting analytics for article:', articleId);
+
+    // Verify article exists
+    const article = await Article.findById(articleId);
+    if (!article) {
+      return res.status(404).json({ error: 'Article not found' });
+    }
+
     const analytics = await ArticleAnalytics.findOne({ articleId });
-    res.json(analytics);
+    console.log('Article analytics:', analytics);
+    res.json(analytics || { views: 0, uniqueViews: [], dailyStats: [] });
   } catch (error) {
+    console.error('Error getting article analytics:', error);
     res.status(500).json({ error: 'Failed to get article analytics' });
   }
 };
