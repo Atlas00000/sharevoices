@@ -4,7 +4,9 @@ import {
   getArticle,
   createArticle,
   updateArticle,
-  deleteArticle
+  deleteArticle,
+  updateArticleStatus,
+  getArticleVersions
 } from '../controllers/articleController';
 import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '../models/User';
@@ -26,6 +28,18 @@ router.put('/:id',
   authenticate, 
   authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
   updateArticle
+);
+
+router.patch('/:id/status',
+  authenticate,
+  authorize([UserRole.ADMIN, UserRole.AUTHOR]),
+  updateArticleStatus
+);
+
+router.get('/:id/versions',
+  authenticate,
+  authorize([UserRole.ADMIN, UserRole.AUTHOR]),
+  getArticleVersions
 );
 
 router.delete('/:id', 
