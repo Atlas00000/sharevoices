@@ -2,6 +2,13 @@
 FROM node:18-alpine AS builder
 WORKDIR /usr/src/app
 
+# Install build dependencies for sharp
+RUN apk add --no-cache --virtual .gyp \
+    python3 \
+    make \
+    g++ \
+    && apk add --no-cache vips-dev
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
