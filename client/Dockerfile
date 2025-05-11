@@ -1,17 +1,16 @@
 # Stage 1: Build
 FROM node:18-alpine AS builder
 
-# Set workdir to root of monorepo
 WORKDIR /app
 
 # Copy root package files
-COPY ../../package.json ../../package-lock.json ./
+COPY package.json package-lock.json ./
 
 # Copy workspace (client) package.json
-COPY ./package.json ./client/
+COPY client/package.json ./client/
 
 # Copy all workspace files (for build)
-COPY . ./client
+COPY client ./client
 
 # Install dependencies for all workspaces
 RUN npm install
@@ -24,9 +23,12 @@ RUN npm run build
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-# Copy only the built client app and necessary files
+# Copy built files
 COPY --from=builder /app/client/.next ./.next
 COPY --from=builder /app/client/public ./public
+
+# Copy source files
+COPY --from=builder /app/client/src ./src
 COPY --from=builder /app/client/package.json ./
 COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/client/next.config.js ./

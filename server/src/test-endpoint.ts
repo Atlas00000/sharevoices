@@ -98,8 +98,8 @@ async function createArticle(token: string) {
       }
     );
     if (typeof response.data === 'object' && response.data !== null) {
-      console.log('Article created successfully:', response.data);
-      return response.data;
+    console.log('Article created successfully:', response.data);
+    return response.data;
     } else {
       console.log('Article created successfully, but response data is not an object:', response.data);
       return {};
@@ -129,7 +129,7 @@ async function runTests() {
     console.log('All tests passed!');
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error('Test failed:', error.message);
+    console.error('Test failed:', error.message);
     } else {
       console.error('Test failed:', error);
     }
