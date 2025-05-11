@@ -2,12 +2,13 @@
   "name": "shared-voices-server",
   "version": "1.0.0",
   "description": "Backend server for Shared Voices platform",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
