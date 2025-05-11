@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express from 'express';
 import {
   getArticles,
   getArticle,
@@ -6,14 +6,32 @@ import {
   updateArticle,
   deleteArticle
 } from '../controllers/articleController';
+import { authenticate, authorize } from '../middleware/auth';
+import { UserRole } from '../models/User';
 
-const router = Router();
+const router = express.Router();
 
-// Article routes
-router.get('/', getArticles);
+// Public routes
+router.get('/', getArticles); // Includes search and pagination
 router.get('/:id', getArticle);
-router.post('/', createArticle);
-router.put('/:id', updateArticle);
-router.delete('/:id', deleteArticle);
+
+// Protected routes
+router.post('/', 
+  authenticate, 
+  authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  createArticle
+);
+
+router.put('/:id', 
+  authenticate, 
+  authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  updateArticle
+);
+
+router.delete('/:id', 
+  authenticate, 
+  authorize([UserRole.ADMIN]), 
+  deleteArticle
+);
 
 export default router; 

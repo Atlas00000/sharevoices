@@ -1,8 +1,9 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import helmet from 'helmet';
 import dotenv from 'dotenv';
 import articleRoutes from './routes/articleRoutes';
+import authRoutes from './routes/authRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +12,6 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
@@ -19,16 +19,17 @@ app.use(express.json());
 
 // Routes
 app.use('/api/articles', articleRoutes);
+app.use('/api/auth', authRoutes);
 
-// Basic health check endpoint
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok' });
 });
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: 'Something broke!' });
 });
 
 export default app; 
