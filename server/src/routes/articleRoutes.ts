@@ -1,4 +1,7 @@
 import express from 'express';
+import { auth } from '../middleware/auth';
+import authorize from '../middleware/authorize';
+import { UserRole } from '../models/User';
 import {
   getArticles,
   getArticle,
@@ -8,8 +11,6 @@ import {
   updateArticleStatus,
   getArticleVersions
 } from '../controllers/articleController';
-import { auth, authorize } from '../middleware/auth';
-import { UserRole } from '../models/User';
 import { upload } from '../utils/imageUpload';
 
 const router = express.Router();

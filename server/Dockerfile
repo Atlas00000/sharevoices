@@ -6,8 +6,10 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
+# Install dependencies including dev dependencies
 RUN npm install
+RUN npm install helmet morgan
+RUN npm install --save-dev @types/helmet @types/morgan
 
 # Copy source code
 COPY src/ ./src/
@@ -22,6 +24,7 @@ WORKDIR /usr/src/app
 # Copy package files and install production dependencies
 COPY package*.json ./
 RUN npm install --omit=dev
+RUN npm install helmet morgan
 
 # Copy built files from builder
 COPY --from=builder /usr/src/app/dist ./dist

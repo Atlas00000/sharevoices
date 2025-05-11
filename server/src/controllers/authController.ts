@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { User, IUser } from '../models/User';
+import { User, IUser, UserRole } from '../models/User';
 import { z } from 'zod';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -15,7 +15,8 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  name: z.string().min(2)
+  name: z.string().min(2),
+  role: z.nativeEnum(UserRole)
 });
 
 // Login controller
@@ -60,7 +61,7 @@ export const login = async (req: Request, res: Response) => {
 // Register controller
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = registerSchema.parse(req.body);
+    const { email, password, name, role } = registerSchema.parse(req.body);
     
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -71,7 +72,7 @@ export const register = async (req: Request, res: Response) => {
       email,
       password,
       name,
-      role: 'reader'
+      role: role || UserRole.READER
     });
 
     await user.save();

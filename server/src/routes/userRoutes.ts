@@ -1,4 +1,7 @@
 import express from 'express';
+import { auth } from '../middleware/auth';
+import authorize from '../middleware/authorize';
+import { UserRole } from '../models/User';
 import {
   getUserProfile,
   updateUserProfile,
@@ -6,8 +9,6 @@ import {
   getAllUsers,
   updateUserRole
 } from '../controllers/userController';
-import { auth, authorize } from '../middleware/auth';
-import { UserRole } from '../models/User';
 
 const router = express.Router();
 

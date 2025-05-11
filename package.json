@@ -22,10 +22,16 @@
     "lint:server": "cd server && npm run lint"
   },
   "devDependencies": {
+    "@types/helmet": "^0.0.48",
+    "@types/morgan": "^1.9.9",
     "concurrently": "^8.2.2",
     "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0"
   }
-} 
+}
