@@ -103,7 +103,7 @@ export const userSchema = z.object({
 });
 
 // Mongoose schema
-const userMongooseSchema = new mongoose.Schema({
+const mongooseSchema = new mongoose.Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
@@ -136,7 +136,7 @@ const userMongooseSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userMongooseSchema.pre('save', async function(next) {
+mongooseSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
   try {
@@ -149,9 +149,9 @@ userMongooseSchema.pre('save', async function(next) {
 });
 
 // Compare password method
-userMongooseSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+mongooseSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = mongoose.model<IUser>('User', userMongooseSchema);
+export const User = mongoose.model<IUser>('User', mongooseSchema);
 export type UserInput = z.infer<typeof userSchema>; 

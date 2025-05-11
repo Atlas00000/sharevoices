@@ -33,15 +33,18 @@ const preferencesUpdateSchema = z.object({
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated' });
     }
+
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
+
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching user profile' });
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ message: 'Error fetching user profile' });
   }
 };
 
@@ -49,25 +52,27 @@ export const getUserProfile = async (req: Request, res: Response) => {
 export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated' });
     }
+
     const validatedData = profileUpdateSchema.parse(req.body);
-    const user = await User.findById(req.user.id);
-    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { profile: validatedData } },
+      { new: true }
+    ).select('-password');
+
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update profile fields
-    Object.assign(user.profile, validatedData);
-    await user.save();
-
-    res.json({ message: 'Profile updated successfully', profile: user.profile });
+    res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ message: 'Invalid profile data', errors: error.errors });
     }
-    res.status(500).json({ error: 'Error updating profile' });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Error updating profile' });
   }
 };
 
@@ -75,25 +80,27 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 export const updateUserPreferences = async (req: Request, res: Response) => {
   try {
     if (!req.user?.id) {
-      return res.status(401).json({ error: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated' });
     }
+
     const validatedData = preferencesUpdateSchema.parse(req.body);
-    const user = await User.findById(req.user.id);
-    
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { preferences: validatedData } },
+      { new: true }
+    ).select('-password');
+
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update preferences fields
-    Object.assign(user.preferences, validatedData);
-    await user.save();
-
-    res.json({ message: 'Preferences updated successfully', preferences: user.preferences });
+    res.json({ message: 'Preferences updated successfully', user });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ message: 'Invalid preferences data', errors: error.errors });
     }
-    res.status(500).json({ error: 'Error updating preferences' });
+    console.error('Error updating preferences:', error);
+    res.status(500).json({ message: 'Error updating preferences' });
   }
 };
 

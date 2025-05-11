@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserRole } from '../models/User';
+import { User } from '../models/User';
 
 // Extend Express Request type to include user
 declare global {
@@ -8,7 +8,7 @@ declare global {
     interface Request {
       user?: {
         id: string;
-        role: UserRole;
+        role: string;
       };
     }
   }
@@ -17,36 +17,43 @@ declare global {
 // JWT secret from environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Middleware to verify JWT token
-export const authenticate = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+// Authentication middleware
+export const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: UserRole };
-    req.user = decoded;
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    req.user = {
+      id: user._id.toString(),
+      role: user.role
+    };
+
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Auth middleware error:', error);
+    res.status(401).json({ message: 'Token is invalid' });
   }
 };
 
-// Middleware to check user role
-export const authorize = (roles: UserRole[]) => {
+// Role-based authorization middleware
+export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ message: 'Not authenticated' });
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
+      return res.status(403).json({ message: 'Not authorized to access this resource' });
     }
 
     next();
@@ -54,6 +61,6 @@ export const authorize = (roles: UserRole[]) => {
 };
 
 // Generate JWT token
-export const generateToken = (userId: string, role: UserRole): string => {
+export const generateToken = (userId: string, role: string): string => {
   return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: '24h' });
 }; 

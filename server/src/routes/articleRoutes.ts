@@ -8,7 +8,7 @@ import {
   updateArticleStatus,
   getArticleVersions
 } from '../controllers/articleController';
-import { authenticate, authorize } from '../middleware/auth';
+import { auth, authorize } from '../middleware/auth';
 import { UserRole } from '../models/User';
 import { upload } from '../utils/imageUpload';
 
@@ -20,34 +20,34 @@ router.get('/:id', getArticle);
 
 // Protected routes
 router.post('/', 
-  authenticate, 
-  authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  auth, 
+  authorize(UserRole.ADMIN, UserRole.AUTHOR), 
   upload.single('featuredImage'),
   createArticle
 );
 
 router.put('/:id', 
-  authenticate, 
-  authorize([UserRole.ADMIN, UserRole.AUTHOR]), 
+  auth, 
+  authorize(UserRole.ADMIN, UserRole.AUTHOR), 
   upload.single('featuredImage'),
   updateArticle
 );
 
 router.patch('/:id/status',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.AUTHOR]),
+  auth,
+  authorize(UserRole.ADMIN, UserRole.AUTHOR),
   updateArticleStatus
 );
 
 router.get('/:id/versions',
-  authenticate,
-  authorize([UserRole.ADMIN, UserRole.AUTHOR]),
+  auth,
+  authorize(UserRole.ADMIN, UserRole.AUTHOR),
   getArticleVersions
 );
 
 router.delete('/:id', 
-  authenticate, 
-  authorize([UserRole.ADMIN]), 
+  auth, 
+  authorize(UserRole.ADMIN), 
   deleteArticle
 );
 

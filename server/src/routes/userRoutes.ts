@@ -6,7 +6,7 @@ import {
   getAllUsers,
   updateUserRole
 } from '../controllers/userController';
-import { authenticate, authorize } from '../middleware/auth';
+import { auth, authorize } from '../middleware/auth';
 import { UserRole } from '../models/User';
 
 const router = express.Router();
@@ -23,21 +23,12 @@ router.post('/login', (req, res) => {
 });
 
 // Protected routes
-router.get('/profile', authenticate, getUserProfile);
-router.put('/profile', authenticate, updateUserProfile);
-router.put('/preferences', authenticate, updateUserPreferences);
-
-router.get('/admin/users',
-  authenticate,
-  authorize([UserRole.ADMIN]),
-  (req, res) => {
-    // TODO: Implement get all users (admin only)
-    res.status(501).json({ error: 'Not implemented' });
-  }
-);
+router.get('/profile', auth, getUserProfile);
+router.put('/profile', auth, updateUserProfile);
+router.put('/preferences', auth, updateUserPreferences);
 
 // Admin routes
-router.get('/', authenticate, authorize([UserRole.ADMIN]), getAllUsers);
-router.put('/:userId/role', authenticate, authorize([UserRole.ADMIN]), updateUserRole);
+router.get('/', auth, authorize(UserRole.ADMIN), getAllUsers);
+router.put('/:userId/role', auth, authorize(UserRole.ADMIN), updateUserRole);
 
 export default router; 
